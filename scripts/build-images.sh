@@ -2,7 +2,8 @@
 # dhoch3-ai-services - Build All Local Docker Images
 # This script builds all locally-defined Docker images with proper error handling
 
-set -e  # Exit on error
+# Note: We don't use 'set -e' here because we want to continue building
+# other images even if one fails, and show a summary at the end
 
 # Colors for output
 RED='\033[0;31m'
@@ -73,16 +74,16 @@ build_service() {
     fi
 }
 
-# Build all services
+# Build all services (always continue on error to build all images)
+echo -e "${YELLOW}Building all services (will continue even if one fails)...${NC}"
+echo ""
+
 for service in "${SERVICES[@]}"; do
     if build_service "$service"; then
         ((SUCCESS++))
     else
         ((FAILED++))
-        if [ "$1" != "--continue-on-error" ]; then
-            echo -e "${RED}Build failed. Use --continue-on-error to continue building other images.${NC}"
-            exit 1
-        fi
+        echo -e "${YELLOW}⚠ Continuing with next service...${NC}"
     fi
     echo ""
 done
@@ -99,7 +100,10 @@ fi
 echo ""
 
 if [ $FAILED -eq 0 ]; then
-    echo -e "${GREEN}All images built successfully!${NC}"
+    echo -e "${GREEN}✓ All images built successfully!${NC}"
+    echo ""
+    echo -e "${BLUE}Built images:${NC}"
+    docker images | grep "dhoch3/" | head -10
     echo ""
     echo -e "${BLUE}Next steps:${NC}"
     echo "1. Copy .env.example to .env and configure your settings"
@@ -107,7 +111,12 @@ if [ $FAILED -eq 0 ]; then
     echo "3. Run: docker-compose up -d"
     exit 0
 else
-    echo -e "${RED}Some images failed to build${NC}"
+    echo -e "${RED}⚠ Some images failed to build${NC}"
+    echo ""
+    echo -e "${YELLOW}Successfully built images:${NC}"
+    docker images | grep "dhoch3/" | head -10
+    echo ""
+    echo -e "${RED}Please check the error messages above and fix the Dockerfiles.${NC}"
     exit 1
 fi
 
