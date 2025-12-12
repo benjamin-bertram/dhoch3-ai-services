@@ -1,0 +1,45 @@
+services:
+  node-exporter:
+    image: docker.intelego.net/cm/node-exporter:latest
+    hostname: node-exporter.d3stds1.intelego.cloud
+    pid: host
+    #network_mode: host
+    restart: always
+    command:
+      - '--path.rootfs=/host'
+      - --collector.processes
+      - --collector.textfile.directory=/mnt/textfile
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|host/var/lib/docker/containers|host/var/lib/docker/overlay2|host/run/docker/netns|host/var/lib/docker/aufs)($$|/)"
+
+    environment:
+      - TZ=Europe/Berlin
+
+    labels:
+      autoheal.enable: 'true'
+      autoheal.stop.timeout: '10'
+      metrics.enable: 'true'
+      traefik.enable: 'true'
+      traefik.docker.network: base
+
+      
+      # Intelego configuration
+      traefik.http.routers.base-node-exporter.entrypoints: 'websecure '
+      traefik.http.routers.base-node-exporter.middlewares: 'admin-auth@file, default@file'
+      traefik.http.routers.base-node-exporter.rule: 'Host(`d3stds1.design-hoch-drei.de`) && Path(`/metrics`)'
+      traefik.http.routers.base-node-exporter.tls: true   
+      traefik.http.routers.base-node-exporter.tls.certresolver: 'letsencryptresolver'
+      traefik.http.routers.base-node-exporter.priority: 1000
+      traefik.http.services.base-node-exporter.loadbalancer.server.port: '9100'
+      
+    volumes:
+      - "/:/host:ro,rslave"
+      - "/vol/service/base/node-exporter/volumes/textfile:/mnt/textfile"
+
+    networks:
+      base:
+
+networks:
+  base:
+    external: true
+    name: base
