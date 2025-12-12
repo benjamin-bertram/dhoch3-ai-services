@@ -24,11 +24,18 @@ services:
     ports:
       - ${COMFYUI_PORT:-8188}:8188
     volumes:
+      # Shared models (read-only)
       - ${MODELS_PATH}:/models:ro
+      # Service data
       - comfyui-data:/app/ComfyUI
+      # User outputs
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/ComfyUI
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/ComfyUI
         target: /outputs
+      # User inputs (optional)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
+        target: /inputs:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -66,10 +73,16 @@ services:
     ports:
       - ${FOOOCUS_PORT:-7860}:7860
     volumes:
+      # Shared models (read-only)
       - ${MODELS_PATH}:/models:ro
+      # User outputs
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/Fooocus
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/Fooocus
         target: /outputs
+      # User inputs (optional)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
+        target: /inputs:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -107,10 +120,16 @@ services:
     ports:
       - ${FORGE_PORT:-7861}:7861
     volumes:
+      # Shared models (read-only)
       - ${MODELS_PATH}:/models:ro
+      # User outputs
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/Forge
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/Forge
         target: /outputs
+      # User inputs (optional)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
+        target: /inputs:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -145,11 +164,18 @@ services:
     ports:
       - ${INVOKEAI_PORT:-9090}:9090
     volumes:
+      # Shared models (read-only)
       - ${MODELS_PATH}:/models:ro
+      # Service data
       - invokeai-data:/invokeai
+      # User outputs
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/InvokeAI
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/InvokeAI
         target: /outputs
+      # User inputs (optional)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
+        target: /inputs:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -187,13 +213,16 @@ services:
     ports:
       - ${FLUXGYM_PORT:-3000}:3000
     volumes:
+      # Shared models (read-only)
       - ${MODELS_PATH}:/models:ro
+      # Training outputs (LoRAs, checkpoints)
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/FluxGym
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/FluxGym
         target: /outputs
+      # Training datasets
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/FluxGym/datasets
-        target: /datasets
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input/datasets
+        target: /datasets:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -231,15 +260,19 @@ services:
     ports:
       - ${AI_TOOLKIT_PORT:-8080}:8080
     volumes:
+      # Shared models (read-only)
       - ${MODELS_PATH}:/models:ro
+      # Training outputs
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/AIToolkit
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/AIToolkit
         target: /outputs
+      # Training datasets
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/AIToolkit/datasets
-        target: /datasets
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input/datasets
+        target: /datasets:ro
+      # Configuration files
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/AIToolkit/config
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage/AIToolkit/config
         target: /config
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
