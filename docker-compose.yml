@@ -24,18 +24,24 @@ services:
     ports:
       - ${COMFYUI_PORT:-8188}:8188
     volumes:
-      # Shared models (read-only)
-      - ${MODELS_PATH}:/models:ro
+      # Shared models (via SMB symlinks - bidirectional)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
+        target: /models
       # Service data
       - comfyui-data:/app/ComfyUI
-      # User outputs
+      # User outputs (direct to SMB)
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/ComfyUI
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
         target: /outputs
-      # User inputs (optional)
+      # User inputs (direct from SMB)
       - type: bind
         source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
         target: /inputs:ro
+      # Workflows (direct to SMB)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/workflows
+        target: /workflows
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -73,13 +79,15 @@ services:
     ports:
       - ${FOOOCUS_PORT:-7860}:7860
     volumes:
-      # Shared models (read-only)
-      - ${MODELS_PATH}:/models:ro
-      # User outputs
+      # Shared models (via SMB symlinks - bidirectional)
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/Fooocus
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
+        target: /models
+      # User outputs (direct to SMB)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
         target: /outputs
-      # User inputs (optional)
+      # User inputs (direct from SMB)
       - type: bind
         source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
         target: /inputs:ro
@@ -120,13 +128,15 @@ services:
     ports:
       - ${FORGE_PORT:-7861}:7861
     volumes:
-      # Shared models (read-only)
-      - ${MODELS_PATH}:/models:ro
-      # User outputs
+      # Shared models (via SMB symlinks - bidirectional)
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/Forge
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
+        target: /models
+      # User outputs (direct to SMB)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
         target: /outputs
-      # User inputs (optional)
+      # User inputs (direct from SMB)
       - type: bind
         source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
         target: /inputs:ro
@@ -164,15 +174,17 @@ services:
     ports:
       - ${INVOKEAI_PORT:-9090}:9090
     volumes:
-      # Shared models (read-only)
-      - ${MODELS_PATH}:/models:ro
+      # Shared models (via SMB symlinks - bidirectional)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
+        target: /models
       # Service data
       - invokeai-data:/invokeai
-      # User outputs
+      # User outputs (direct to SMB)
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/InvokeAI
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
         target: /outputs
-      # User inputs (optional)
+      # User inputs (direct from SMB)
       - type: bind
         source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
         target: /inputs:ro
@@ -213,15 +225,17 @@ services:
     ports:
       - ${FLUXGYM_PORT:-3000}:3000
     volumes:
-      # Shared models (read-only)
-      - ${MODELS_PATH}:/models:ro
-      # Training outputs (LoRAs, checkpoints)
+      # Shared models (via SMB symlinks - bidirectional)
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/FluxGym
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
+        target: /models
+      # Training outputs (direct to SMB)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
         target: /outputs
-      # Training datasets
+      # Training datasets (direct from SMB)
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input/datasets
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
         target: /datasets:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
@@ -260,20 +274,22 @@ services:
     ports:
       - ${AI_TOOLKIT_PORT:-8080}:8080
     volumes:
-      # Shared models (read-only)
-      - ${MODELS_PATH}:/models:ro
-      # Training outputs
+      # Shared models (via SMB symlinks - bidirectional)
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output/AIToolkit
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
+        target: /models
+      # Training outputs (direct to SMB)
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
         target: /outputs
-      # Training datasets
+      # Training datasets (direct from SMB)
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input/datasets
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
         target: /datasets:ro
-      # Configuration files
+      # Workflows (direct to SMB)
       - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage/AIToolkit/config
-        target: /config
+        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/workflows
+        target: /workflows
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}

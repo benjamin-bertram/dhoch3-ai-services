@@ -67,6 +67,70 @@ chown -R 1000:1000 "${USER_STORAGE_PATH}"
 echo -e "${GREEN}✓${NC} Permissions set (UID:1000, GID:1000)"
 echo ""
 
+# Create bidirectional symlinks for models
+echo -e "${BLUE}Creating bidirectional model symlinks...${NC}"
+
+MODEL_PATH="${BASE_PATH}/storage-models/models"
+SMB_MODELS_DIR="${USER_STORAGE_PATH}/models"
+
+# Check if SMB models directory exists
+if [ -d "$SMB_MODELS_DIR" ]; then
+    echo -e "${GREEN}✓${NC} SMB models directory exists: $SMB_MODELS_DIR"
+
+    # Create symlinks FROM server model storage TO SMB
+    # This allows models downloaded on server to appear on SMB
+    if [ -d "$MODEL_PATH" ]; then
+        echo -e "${BLUE}Creating symlinks from server to SMB...${NC}"
+
+        # For each model type, create symlink if it doesn't exist
+        for model_type in checkpoints loras vae controlnet upscale_models embeddings clip diffusion_models text_encoders unet style_models; do
+            SERVER_DIR="${MODEL_PATH}/${model_type}"
+            SMB_LINK="${SMB_MODELS_DIR}/${model_type}"
+
+            if [ -d "$SERVER_DIR" ]; then
+                # Remove existing symlink if it exists
+                [ -L "$SMB_LINK" ] && rm "$SMB_LINK"
+
+                # Create symlink from SMB to server
+                if [ ! -e "$SMB_LINK" ]; then
+                    ln -s "$SERVER_DIR" "$SMB_LINK"
+                    echo -e "  ${GREEN}✓${NC} Linked: models/${model_type}"
+                fi
+            fi
+        done
+
+        echo ""
+        echo -e "${GREEN}✓${NC} Bidirectional model access configured!"
+        echo ""
+        echo "Model access:"
+        echo "  Server → SMB: Models downloaded on server appear on SMB"
+        echo "  SMB → Server: Models uploaded to SMB appear on server"
+        echo ""
+        echo "SMB path for clients:"
+        echo "  \\\\192.168.0.6\\ki_Daten\\storage-user\\models\\"
+        echo ""
+        echo "Available model folders:"
+        echo "  - checkpoints/      (Stable Diffusion checkpoints)"
+        echo "  - loras/            (LoRA models)"
+        echo "  - vae/              (VAE models)"
+        echo "  - controlnet/       (ControlNet models)"
+        echo "  - upscale_models/   (Upscalers)"
+        echo "  - embeddings/       (Textual inversions)"
+        echo "  - clip/             (CLIP models)"
+        echo "  - diffusion_models/ (Flux and other diffusion models)"
+        echo "  - text_encoders/    (T5, CLIP encoders)"
+        echo "  - unet/             (UNet models)"
+    else
+        echo -e "${YELLOW}Warning: Server model storage not found at $MODEL_PATH${NC}"
+    fi
+else
+    echo -e "${YELLOW}Warning: SMB models directory not found at $SMB_MODELS_DIR${NC}"
+    echo "Creating it now..."
+    mkdir -p "$SMB_MODELS_DIR"
+fi
+
+echo ""
+
 # Display directory structure
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}Directory Structure Created:${NC}"
