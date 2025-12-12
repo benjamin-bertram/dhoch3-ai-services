@@ -1,8 +1,8 @@
 # AI Toolkit (Ostris) Dockerfile
-# Optimized for RTX Pro 6000 with CUDA 12.1 support
-# Training toolkit for AI models
+# Optimized for RTX 5090 / RTX Pro 6000 with CUDA 12.4 support
+# Training toolkit for AI models with Web UI
 
-FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 
 # Build arguments
 ARG DEBIAN_FRONTEND=noninteractive
@@ -18,7 +18,7 @@ ENV PYTHONUNBUFFERED=1 \
     LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}" \
     HF_HUB_ENABLE_HF_TRANSFER=1
 
-# Install system dependencies
+# Install system dependencies including Node.js for UI
 RUN apt-get update && apt-get install -y \
     python${PYTHON_VERSION} \
     python${PYTHON_VERSION}-dev \
@@ -34,7 +34,17 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev \
     libgomp1 \
     build-essential \
+    ca-certificates \
+    gnupg \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 18.x (required for UI)
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set Python 3.10 as default
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 && \
@@ -48,14 +58,22 @@ WORKDIR /ai-toolkit
 
 # Clone AI Toolkit repository
 RUN git clone https://github.com/ostris/ai-toolkit.git . && \
-    git checkout main
+    git checkout main && \
+    git submodule update --init --recursive
 
-# Install PyTorch with CUDA 12.1 support
-RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# Install PyTorch with CUDA 12.4 support (for RTX 5090)
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
 # Install AI Toolkit dependencies
-# Note: Some packages are installed from git, so this may take time
 RUN pip install -r requirements.txt
+
+# Install and build UI
+WORKDIR /ai-toolkit/ui
+RUN npm install && \
+    npm run build
+
+# Back to main directory
+WORKDIR /ai-toolkit
 
 # Create directories for models, outputs, and datasets
 RUN mkdir -p /models /outputs /datasets /config
@@ -66,14 +84,17 @@ ENV AI_TOOLKIT_MODEL_PATH=/models \
     AI_TOOLKIT_DATASET_PATH=/datasets \
     AI_TOOLKIT_CONFIG_PATH=/config
 
-# Expose port (for future web UI or API)
-EXPOSE 8080
+# Expose UI port
+EXPOSE 8675
 
-# Create entrypoint script
+# Create entrypoint script that starts the UI
 RUN echo '#!/bin/bash\n\
-echo "AI Toolkit container started"\n\
-echo "This is a training toolkit - use docker exec to run training jobs"\n\
-echo "Example: docker exec dhoch3-ai-toolkit python run.py /config/my-config.yaml"\n\
+echo "========================================"\n\
+echo "AI Toolkit with Web UI"\n\
+echo "========================================"\n\
+echo ""\n\
+echo "Starting Web UI on port 8675..."\n\
+echo "Access at: http://localhost:8675"\n\
 echo ""\n\
 echo "Available directories:"\n\
 echo "  /models   - Model storage"\n\
@@ -81,14 +102,15 @@ echo "  /outputs  - Training outputs"\n\
 echo "  /datasets - Training datasets"\n\
 echo "  /config   - Configuration files"\n\
 echo ""\n\
-echo "Container will stay running. Use Ctrl+C or docker stop to exit."\n\
-tail -f /dev/null\n\
+echo "========================================"\n\
+cd /ai-toolkit/ui\n\
+npm run start\n\
 ' > /entrypoint.sh && chmod +x /entrypoint.sh
 
-# Health check - just check if container is running
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD pgrep -f "tail -f /dev/null" > /dev/null || exit 1
+# Health check - check if UI is responding
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8675/ || exit 1
 
-# Keep container running - training jobs run via docker exec
+# Start the UI
 CMD ["/entrypoint.sh"]
 

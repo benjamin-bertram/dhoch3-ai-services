@@ -101,7 +101,7 @@ services:
       - traefik.http.routers.fooocus.middlewares=${TRAEFIK_MIDDLEWARE:-default@file}
       - traefik.http.services.fooocus.loadbalancer.server.port=7860
   # ============================================
-  # Forge - Stable Diffusion WebUI
+  # Reforge Neo - Stable Diffusion WebUI Forge Classic (Neo Branch)
   # ============================================
   forge:
     build:
@@ -185,51 +185,9 @@ services:
       - traefik.http.routers.invokeai.tls.certresolver=${CERT_RESOLVER:-letsencryptresolver}
       - traefik.http.routers.invokeai.middlewares=${TRAEFIK_MIDDLEWARE:-default@file}
       - traefik.http.services.invokeai.loadbalancer.server.port=9090
+
   # ============================================
-  # FluxGym - Flux LoRA Training
-  # ============================================
-  fluxgym:
-    build:
-      context: ./dockerfiles/fluxgym
-      dockerfile: Dockerfile
-    image: dhoch3/fluxgym:latest
-    container_name: dhoch3-fluxgym
-    restart: unless-stopped
-    networks:
-      - traefik
-      - ai-services
-    ports:
-      - ${FLUXGYM_PORT:-3000}:3000
-    volumes:
-      # Shared models (READ-ONLY)
-      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
-      # Training outputs
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/FluxGym:/outputs
-      # Training datasets (READ-ONLY)
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/datasets:ro
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
-      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities:
-                - gpu
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik_default}
-      # HTTP Router
-      - traefik.http.routers.fluxgym.entrypoints=websecure
-      - traefik.http.routers.fluxgym.rule=Host(`${FLUXGYM_SUBDOMAIN:-fluxgym}.${DOMAIN}`)
-      - traefik.http.routers.fluxgym.tls=true
-      - traefik.http.routers.fluxgym.tls.certresolver=${CERT_RESOLVER:-letsencryptresolver}
-      - traefik.http.routers.fluxgym.middlewares=${TRAEFIK_MIDDLEWARE:-default@file}
-      - traefik.http.services.fluxgym.loadbalancer.server.port=3000
-  # ============================================
-  # AI Toolkit - AI Training Tools
+  # AI Toolkit - AI Training Tools with Web UI
   # ============================================
   ai-toolkit:
     build:
@@ -242,7 +200,7 @@ services:
       - traefik
       - ai-services
     ports:
-      - ${AI_TOOLKIT_PORT:-8080}:8080
+      - ${AI_TOOLKIT_PORT:-8675}:8675
     volumes:
       # Shared models (READ-ONLY)
       - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
@@ -272,7 +230,7 @@ services:
       - traefik.http.routers.ai-toolkit.tls=true
       - traefik.http.routers.ai-toolkit.tls.certresolver=${CERT_RESOLVER:-letsencryptresolver}
       - traefik.http.routers.ai-toolkit.middlewares=${TRAEFIK_MIDDLEWARE:-default@file}
-      - traefik.http.services.ai-toolkit.loadbalancer.server.port=8080
+      - traefik.http.services.ai-toolkit.loadbalancer.server.port=8675
   # ============================================
   # Dockge - Container Management UI
   # ============================================
