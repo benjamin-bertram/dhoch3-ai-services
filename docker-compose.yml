@@ -17,7 +17,9 @@ services:
   comfyui:
     # Using YanWenKun's ComfyUI image (correct repository name)
     # Repository: https://github.com/YanWenKun/ComfyUI-Docker
-    image: ${COMFYUI_IMAGE:-yanwk/comfyui-boot:cu128-megapak}
+    # Using cu124-megapak for better RTX 6000 Ada compatibility (compute capability 8.9)
+    # cu128 had flash-attention issues with this GPU
+    image: ${COMFYUI_IMAGE:-yanwk/comfyui-boot:cu124-megapak}
     container_name: dhoch3-comfyui
     restart: unless-stopped
     networks:
@@ -74,11 +76,11 @@ services:
       - ${FOOOCUS_PORT:-7860}:7860
     volumes:
       # Shared models (READ-ONLY)
-      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/root/models
       # User outputs
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/Fooocus:/outputs
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/Fooocus:/root/outputs
       # User inputs (READ-ONLY)
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
+      #- ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -157,7 +159,7 @@ services:
       - ${INVOKEAI_PORT:-9090}:9090
     volumes:
       # Shared models (READ-ONLY)
-      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/root/models:ro
       # Service data
       - invokeai-data:/invokeai
       # User outputs
