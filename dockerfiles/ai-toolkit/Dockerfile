@@ -66,13 +66,29 @@ ENV AI_TOOLKIT_MODEL_PATH=/models \
     AI_TOOLKIT_DATASET_PATH=/datasets \
     AI_TOOLKIT_CONFIG_PATH=/config
 
-# Expose Gradio port (if UI is available)
+# Expose port (for future web UI or API)
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
-    CMD curl -f http://localhost:8080/ || exit 1
+# Create entrypoint script
+RUN echo '#!/bin/bash\n\
+echo "AI Toolkit container started"\n\
+echo "This is a training toolkit - use docker exec to run training jobs"\n\
+echo "Example: docker exec dhoch3-ai-toolkit python run.py /config/my-config.yaml"\n\
+echo ""\n\
+echo "Available directories:"\n\
+echo "  /models   - Model storage"\n\
+echo "  /outputs  - Training outputs"\n\
+echo "  /datasets - Training datasets"\n\
+echo "  /config   - Configuration files"\n\
+echo ""\n\
+echo "Container will stay running. Use Ctrl+C or docker stop to exit."\n\
+tail -f /dev/null\n\
+' > /entrypoint.sh && chmod +x /entrypoint.sh
 
-# Default command - can be overridden for training jobs
-CMD ["python", "run.py"]
+# Health check - just check if container is running
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD pgrep -f "tail -f /dev/null" > /dev/null || exit 1
+
+# Keep container running - training jobs run via docker exec
+CMD ["/entrypoint.sh"]
 

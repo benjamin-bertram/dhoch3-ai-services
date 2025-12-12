@@ -1,7 +1,7 @@
 # Stable Diffusion WebUI Forge Dockerfile
 # Optimized for RTX 5090 / RTX Pro 6000 with CUDA 12.4 support
 
-FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 
 # Build arguments
 ARG DEBIAN_FRONTEND=noninteractive
