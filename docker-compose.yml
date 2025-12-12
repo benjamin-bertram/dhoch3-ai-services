@@ -17,9 +17,9 @@ services:
   comfyui:
     # Using YanWenKun's ComfyUI image (correct repository name)
     # Repository: https://github.com/YanWenKun/ComfyUI-Docker
-    # Using cu124-megapak for better RTX 6000 Ada compatibility (compute capability 8.9)
-    # cu128 had flash-attention issues with this GPU
-    image: ${COMFYUI_IMAGE:-yanwk/comfyui-boot:cu124-megapak}
+    # Using cu121-megapak - CUDA 12.1 has better flash-attention compatibility with RTX 6000 Ada
+    # cu128 and cu124 both had flash-attention errors (flash_fwd_launch_template.h:180)
+    image: ${COMFYUI_IMAGE:-yanwk/comfyui-boot:cu121-megapak}
     container_name: dhoch3-comfyui
     restart: unless-stopped
     networks:
@@ -41,6 +41,10 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      # Disable flash-attention to avoid CUDA errors on RTX 6000 Ada
+      - XFORMERS_FORCE_DISABLE_TRITON=1
+      # Better CUDA memory management
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
     deploy:
       resources:
         reservations:

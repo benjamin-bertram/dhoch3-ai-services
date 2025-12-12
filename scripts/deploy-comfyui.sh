@@ -6,7 +6,8 @@
 set -e
 
 echo "========================================="
-echo "Deploying ComfyUI with CUDA 12.4"
+echo "Deploying ComfyUI with CUDA 12.1"
+echo "Flash-attention disabled for RTX 6000 Ada"
 echo "========================================="
 
 # Navigate to project root
@@ -18,13 +19,14 @@ docker compose stop comfyui || true
 docker compose rm -f comfyui || true
 
 echo ""
-echo "Step 2: Removing old ComfyUI image..."
+echo "Step 2: Removing old ComfyUI images..."
 docker rmi yanwk/comfyui-boot:cu128-megapak || true
 docker rmi yanwk/comfyui-boot:cu128-megapak-pt28 || true
+docker rmi yanwk/comfyui-boot:cu124-megapak || true
 
 echo ""
-echo "Step 3: Pulling new ComfyUI image (CUDA 12.4)..."
-docker pull yanwk/comfyui-boot:cu124-megapak
+echo "Step 3: Pulling new ComfyUI image (CUDA 12.1)..."
+docker pull yanwk/comfyui-boot:cu121-megapak
 
 echo ""
 echo "Step 4: Starting ComfyUI container..."
@@ -58,7 +60,8 @@ echo "Access ComfyUI at:"
 echo "  - Local: http://192.168.0.10:8188"
 echo "  - Domain: http://comfyui.design-hoch-drei.de"
 echo ""
-echo "This version uses CUDA 12.4 which should fix the"
-echo "flash-attention error on RTX 6000 Ada (compute capability 8.9)"
+echo "This version uses CUDA 12.1 with flash-attention DISABLED"
+echo "to fix the flash_fwd_launch_template.h:180 error"
+echo "on RTX 6000 Ada (compute capability 8.9)"
 echo ""
 
