@@ -152,19 +152,27 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
     source "$PROJECT_ROOT/.env"
 
     if command -v smbclient &> /dev/null; then
-        echo -e "${YELLOW}Testing SMB connection to //${SMB_SERVER}/${SMB_SHARE}...${NC}"
-        if smbclient -m SMB3 "//${SMB_SERVER}/${SMB_SHARE}" -U "${SMB_USER}" -c "ls" &> /dev/null; then
-            echo -e "${GREEN}✓ SMB connection successful${NC}"
+        # Check if SMB password is set
+        if [ -z "$SMB_PASSWORD" ]; then
+            echo -e "${YELLOW}⚠ SMB_PASSWORD not set in .env file${NC}"
+            echo -e "${YELLOW}Skipping SMB connectivity test${NC}"
         else
-            echo -e "${YELLOW}Warning: Could not connect to SMB share${NC}"
-            echo -e "${YELLOW}Please verify SMB credentials in .env file${NC}"
+            echo -e "${YELLOW}Testing SMB connection to //${SMB_SERVER}/${SMB_SHARE}...${NC}"
+            # Use password from environment variable to avoid interactive prompt
+            if smbclient -m SMB3 "//${SMB_SERVER}/${SMB_SHARE}" -U "${SMB_USER}%${SMB_PASSWORD}" -c "ls" &> /dev/null; then
+                echo -e "${GREEN}✓ SMB connection successful${NC}"
+            else
+                echo -e "${YELLOW}⚠ Could not connect to SMB share${NC}"
+                echo -e "${YELLOW}Please verify SMB credentials in .env file${NC}"
+                echo -e "${YELLOW}Server: ${SMB_SERVER}, Share: ${SMB_SHARE}, User: ${SMB_USER}${NC}"
+            fi
         fi
     else
-        echo -e "${YELLOW}Warning: smbclient not installed, skipping SMB test${NC}"
+        echo -e "${YELLOW}⚠ smbclient not installed, skipping SMB test${NC}"
         echo -e "${YELLOW}Install with: sudo apt-get install smbclient${NC}"
     fi
 else
-    echo -e "${YELLOW}Warning: .env file not found, skipping SMB test${NC}"
+    echo -e "${YELLOW}⚠ .env file not found, skipping SMB test${NC}"
 fi
 
 echo ""
