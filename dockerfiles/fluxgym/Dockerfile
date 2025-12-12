@@ -78,10 +78,14 @@ ENV FLUXGYM_MODEL_PATH=/models \
 # Expose Gradio port
 EXPOSE 3000
 
+# Patch app.py to use port 3000 instead of hardcoded 7860
+RUN sed -i 's/server_port=7860/server_port=3000/g' app.py || true
+RUN sed -i 's/server_name="127.0.0.1"/server_name="0.0.0.0"/g' app.py || true
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:3000/ || exit 1
 
 # Run FluxGym
-CMD ["python", "app.py", "--listen", "0.0.0.0", "--port", "3000"]
+CMD ["python", "app.py"]
 
