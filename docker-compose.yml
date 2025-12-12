@@ -27,15 +27,15 @@ services:
       - ${COMFYUI_PORT:-8188}:8188
     volumes:
       # Shared models (READ-ONLY)
-      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/root/ComfyUI/models
       # Service data
       - comfyui-data:/app/ComfyUI
       # User outputs
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/ComfyUI:/outputs
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/ComfyUI:/root/ComfyUI/output
       # User inputs (READ-ONLY)
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/root/ComfyUI/input
       # Workflows
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/workflows:/workflows
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/workflows:/root/ComfyUI/user/default/workflows
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
