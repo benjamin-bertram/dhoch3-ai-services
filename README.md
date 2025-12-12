@@ -44,10 +44,9 @@ This project orchestrates 7 AI/ML services plus a container management UI:
 
 - **ComfyUI** - Node-based AI image generation
 - **Fooocus** - Simplified AI image generation
-- **Forge** - Stable Diffusion WebUI with optimizations
+- **Reforge Neo** - Stable Diffusion WebUI Forge Classic (Neo Branch) with optimizations
 - **InvokeAI** - Professional AI image generation
-- **FluxGym** - Flux LoRA training with low VRAM support
-- **AI Toolkit** - AI model training tools
+- **AI Toolkit** - AI model training tools with Web UI (FLUX.1, SDXL, SD 1.5 LoRA training)
 - **Dockge** - Docker Compose management UI
 - **Ollama** - LLM inference engine (native installation)
 
@@ -92,10 +91,10 @@ All services share:
 - **Purpose**: Simplified AI image generation
 - **Image**: Local build
 
-#### Forge
+#### Reforge Neo
 - **URL**: http://forge.design-hoch-drei.de
 - **Port**: 7861
-- **Purpose**: Stable Diffusion WebUI with performance optimizations
+- **Purpose**: Stable Diffusion WebUI Forge Classic (Neo Branch) - Lightweight fork with Python 3.11, uv package manager, and SageAttention 2 support
 - **Image**: Local build
 
 #### InvokeAI
@@ -105,17 +104,12 @@ All services share:
 - **Image**: Pre-built (official)
 
 ### AI Training
-
-#### FluxGym
-- **URL**: http://fluxgym.design-hoch-drei.de
-- **Port**: 3000
-- **Purpose**: Flux LoRA training with 12GB/16GB/20GB VRAM support
 - **Image**: Local build
 
 #### AI Toolkit
 - **URL**: http://ai-toolkit.design-hoch-drei.de
-- **Port**: 8080
-- **Purpose**: AI model training tools
+- **Port**: 8675
+- **Purpose**: AI model training tools with Web UI (FLUX.1, SDXL, SD 1.5 training)
 - **Image**: Local build
 
 ### Management
@@ -156,8 +150,7 @@ curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.li
 
 This builds local images for:
 - Fooocus
-- Forge
-- FluxGym
+- Reforge Neo
 - AI Toolkit
 
 5. **Start Services**:
@@ -209,7 +202,6 @@ All services are accessible via subdomains:
 - Fooocus: http://fooocus.design-hoch-drei.de
 - Forge: http://forge.design-hoch-drei.de
 - InvokeAI: http://invokeai.design-hoch-drei.de
-- FluxGym: http://fluxgym.design-hoch-drei.de
 - AI Toolkit: http://ai-toolkit.design-hoch-drei.de
 - Dockge: http://dockge.design-hoch-drei.de
 
@@ -266,7 +258,6 @@ Each service has a dedicated SMB folder for outputs:
 - `//192.168.0.6/ki_Daten/Fooocus/`
 - `//192.168.0.6/ki_Daten/Forge/`
 - `//192.168.0.6/ki_Daten/InvokeAI/`
-- `//192.168.0.6/ki_Daten/FluxGym/`
 - `//192.168.0.6/ki_Daten/AIToolkit/`
 
 ## 🔄 Updating
@@ -376,8 +367,6 @@ dhoch3-ai-services/
 │   ├── fooocus/
 │   │   └── Dockerfile
 │   ├── forge/
-│   │   └── Dockerfile
-│   ├── fluxgym/
 │   │   └── Dockerfile
 │   └── ai-toolkit/
 │       └── Dockerfile

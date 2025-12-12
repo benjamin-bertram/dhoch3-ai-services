@@ -34,7 +34,7 @@ if [ -z "$DOCKER_BUILDKIT" ]; then
 fi
 
 # Array of services to build
-declare -a SERVICES=("fooocus" "forge" "fluxgym" "ai-toolkit")
+declare -a SERVICES=("fooocus" "forge" "ai-toolkit")
 
 # Build counter
 TOTAL=${#SERVICES[@]}
