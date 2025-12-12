@@ -26,24 +26,16 @@ services:
     ports:
       - ${COMFYUI_PORT:-8188}:8188
     volumes:
-      # Shared models (via SMB symlinks - bidirectional)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
-        target: /models
+      # Shared models (READ-ONLY)
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
       # Service data
       - comfyui-data:/app/ComfyUI
-      # User outputs (direct to SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
-        target: /outputs
-      # User inputs (direct from SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
-        target: /inputs:ro
-      # Workflows (direct to SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/workflows
-        target: /workflows
+      # User outputs
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/ComfyUI:/outputs
+      # User inputs (READ-ONLY)
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
+      # Workflows
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/workflows:/workflows
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -81,18 +73,12 @@ services:
     ports:
       - ${FOOOCUS_PORT:-7860}:7860
     volumes:
-      # Shared models (via SMB symlinks - bidirectional)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
-        target: /models
-      # User outputs (direct to SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
-        target: /outputs
-      # User inputs (direct from SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
-        target: /inputs:ro
+      # Shared models (READ-ONLY)
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
+      # User outputs
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/Fooocus:/outputs
+      # User inputs (READ-ONLY)
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -130,18 +116,12 @@ services:
     ports:
       - ${FORGE_PORT:-7861}:7861
     volumes:
-      # Shared models (via SMB symlinks - bidirectional)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
-        target: /models
-      # User outputs (direct to SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
-        target: /outputs
-      # User inputs (direct from SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
-        target: /inputs:ro
+      # Shared models (READ-ONLY)
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
+      # User outputs
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/Forge:/outputs
+      # User inputs (READ-ONLY)
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -176,20 +156,14 @@ services:
     ports:
       - ${INVOKEAI_PORT:-9090}:9090
     volumes:
-      # Shared models (via SMB symlinks - bidirectional)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
-        target: /models
+      # Shared models (READ-ONLY)
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
       # Service data
       - invokeai-data:/invokeai
-      # User outputs (direct to SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
-        target: /outputs
-      # User inputs (direct from SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
-        target: /inputs:ro
+      # User outputs
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/InvokeAI:/outputs
+      # User inputs (READ-ONLY)
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -227,18 +201,12 @@ services:
     ports:
       - ${FLUXGYM_PORT:-3000}:3000
     volumes:
-      # Shared models (via SMB symlinks - bidirectional)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
-        target: /models
-      # Training outputs (direct to SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
-        target: /outputs
-      # Training datasets (direct from SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
-        target: /datasets:ro
+      # Shared models (READ-ONLY)
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
+      # Training outputs
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/FluxGym:/outputs
+      # Training datasets (READ-ONLY)
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/datasets:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -276,22 +244,14 @@ services:
     ports:
       - ${AI_TOOLKIT_PORT:-8080}:8080
     volumes:
-      # Shared models (via SMB symlinks - bidirectional)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/models
-        target: /models
-      # Training outputs (direct to SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/output
-        target: /outputs
-      # Training datasets (direct from SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/input
-        target: /datasets:ro
-      # Workflows (direct to SMB)
-      - type: bind
-        source: //${SMB_SERVER}/${SMB_SHARE}/storage-user/workflows
-        target: /workflows
+      # Shared models (READ-ONLY)
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
+      # Training outputs
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/AIToolkit:/outputs
+      # Training datasets (READ-ONLY)
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/datasets:ro
+      # Workflows
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/workflows:/workflows
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
