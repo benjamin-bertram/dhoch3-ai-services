@@ -6,8 +6,8 @@ Containerized AI/ML service orchestration system running multiple AI image gener
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/benjamin-bertram/dhoch3.git
-cd dhoch3
+git clone https://github.com/benjamin-bertram/dhoch3-ai-services.git
+cd dhoch3-ai-services
 
 # 2. Run setup script
 ./scripts/setup.sh
