@@ -42,7 +42,13 @@ services:
                 - gpu
     labels:
       - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik_default}
+      # HTTP Router
+      - traefik.http.routers.comfyui.entrypoints=websecure
       - traefik.http.routers.comfyui.rule=Host(`${COMFYUI_SUBDOMAIN:-comfyui}.${DOMAIN}`)
+      - traefik.http.routers.comfyui.tls=true
+      - traefik.http.routers.comfyui.tls.certresolver=${CERT_RESOLVER:-letsencryptresolver}
+      - traefik.http.routers.comfyui.middlewares=${TRAEFIK_MIDDLEWARE:-default@file}
       - traefik.http.services.comfyui.loadbalancer.server.port=8188
   # ============================================
   # Fooocus - AI Image Generation
@@ -77,7 +83,13 @@ services:
                 - gpu
     labels:
       - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik_default}
+      # HTTP Router
+      - traefik.http.routers.fooocus.entrypoints=websecure
       - traefik.http.routers.fooocus.rule=Host(`${FOOOCUS_SUBDOMAIN:-fooocus}.${DOMAIN}`)
+      - traefik.http.routers.fooocus.tls=true
+      - traefik.http.routers.fooocus.tls.certresolver=${CERT_RESOLVER:-letsencryptresolver}
+      - traefik.http.routers.fooocus.middlewares=${TRAEFIK_MIDDLEWARE:-default@file}
       - traefik.http.services.fooocus.loadbalancer.server.port=7860
   # ============================================
   # Forge - Stable Diffusion WebUI
@@ -112,7 +124,13 @@ services:
                 - gpu
     labels:
       - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik_default}
+      # HTTP Router
+      - traefik.http.routers.forge.entrypoints=websecure
       - traefik.http.routers.forge.rule=Host(`${FORGE_SUBDOMAIN:-forge}.${DOMAIN}`)
+      - traefik.http.routers.forge.tls=true
+      - traefik.http.routers.forge.tls.certresolver=${CERT_RESOLVER:-letsencryptresolver}
+      - traefik.http.routers.forge.middlewares=${TRAEFIK_MIDDLEWARE:-default@file}
       - traefik.http.services.forge.loadbalancer.server.port=7861
   # ============================================
   # InvokeAI - AI Image Generation
@@ -145,7 +163,13 @@ services:
                 - gpu
     labels:
       - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik_default}
+      # HTTP Router
+      - traefik.http.routers.invokeai.entrypoints=websecure
       - traefik.http.routers.invokeai.rule=Host(`${INVOKEAI_SUBDOMAIN:-invokeai}.${DOMAIN}`)
+      - traefik.http.routers.invokeai.tls=true
+      - traefik.http.routers.invokeai.tls.certresolver=${CERT_RESOLVER:-letsencryptresolver}
+      - traefik.http.routers.invokeai.middlewares=${TRAEFIK_MIDDLEWARE:-default@file}
       - traefik.http.services.invokeai.loadbalancer.server.port=9090
   # ============================================
   # FluxGym - Flux LoRA Training
@@ -183,7 +207,13 @@ services:
                 - gpu
     labels:
       - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik_default}
+      # HTTP Router
+      - traefik.http.routers.fluxgym.entrypoints=websecure
       - traefik.http.routers.fluxgym.rule=Host(`${FLUXGYM_SUBDOMAIN:-fluxgym}.${DOMAIN}`)
+      - traefik.http.routers.fluxgym.tls=true
+      - traefik.http.routers.fluxgym.tls.certresolver=${CERT_RESOLVER:-letsencryptresolver}
+      - traefik.http.routers.fluxgym.middlewares=${TRAEFIK_MIDDLEWARE:-default@file}
       - traefik.http.services.fluxgym.loadbalancer.server.port=3000
   # ============================================
   # AI Toolkit - AI Training Tools
@@ -224,7 +254,13 @@ services:
                 - gpu
     labels:
       - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik_default}
+      # HTTP Router
+      - traefik.http.routers.ai-toolkit.entrypoints=websecure
       - traefik.http.routers.ai-toolkit.rule=Host(`${AI_TOOLKIT_SUBDOMAIN:-ai-toolkit}.${DOMAIN}`)
+      - traefik.http.routers.ai-toolkit.tls=true
+      - traefik.http.routers.ai-toolkit.tls.certresolver=${CERT_RESOLVER:-letsencryptresolver}
+      - traefik.http.routers.ai-toolkit.middlewares=${TRAEFIK_MIDDLEWARE:-default@file}
       - traefik.http.services.ai-toolkit.loadbalancer.server.port=8080
   # ============================================
   # Dockge - Container Management UI
@@ -247,5 +283,12 @@ services:
       - DOCKGE_STACKS_DIR=/opt/stacks
     labels:
       - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik_default}
+      # HTTP Router
+      - traefik.http.routers.dockge.entrypoints=websecure
       - traefik.http.routers.dockge.rule=Host(`${DOCKGE_SUBDOMAIN:-dockge}.${DOMAIN}`)
+      - traefik.http.routers.dockge.tls=true
+      - traefik.http.routers.dockge.tls.certresolver=${CERT_RESOLVER:-letsencryptresolver}
+      - traefik.http.routers.dockge.middlewares=${TRAEFIK_MIDDLEWARE:-admin-auth@file,default@file}
+      - traefik.http.routers.dockge.priority=1000
       - traefik.http.services.dockge.loadbalancer.server.port=5001

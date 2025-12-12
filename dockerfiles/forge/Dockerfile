@@ -51,17 +51,22 @@ WORKDIR /app
 RUN git clone https://github.com/lllyasviel/stable-diffusion-webui-forge.git . && \
     git checkout main
 
-# Remove torch and xformers from requirements to avoid conflicts
-RUN grep -v "^torch" requirements_versions.txt | grep -v "^xformers" > requirements_no_torch.txt || cp requirements_versions.txt requirements_no_torch.txt
+# Remove xformers from requirements (incompatible with PyTorch nightly)
+# Keep torch lines but we'll override them
+RUN sed -i '/^xformers/d' requirements_versions.txt
 
-# Install Forge dependencies (without torch and xformers)
-RUN pip install -r requirements_no_torch.txt
+# Install Forge dependencies first (this will install stable PyTorch)
+RUN pip install -r requirements_versions.txt
 
-# Install PyTorch nightly with CUDA 12.4 support (required for RTX 5090 sm_120)
-RUN pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu124
+# Force reinstall PyTorch nightly with CUDA 12.4 support (required for RTX 5090 sm_120)
+# This overrides the stable version from requirements_versions.txt
+RUN pip install --force-reinstall --no-deps --pre torch --index-url https://download.pytorch.org/whl/nightly/cu124
 
-# Do NOT install xformers - it's incompatible and causes crashes
-# Forge will use PyTorch's native attention instead
+# Ensure xformers is NOT installed (diffusers might try to install it)
+RUN pip uninstall -y xformers || true
+
+# Set environment variable to disable xformers in diffusers
+ENV XFORMERS_DISABLED=1
 
 # Create directories for models and outputs
 RUN mkdir -p /models /outputs
@@ -79,7 +84,7 @@ ENV FORGE_MODEL_PATH=/models \
     FORGE_OUTPUT_PATH=/outputs \
     PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
     TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1 \
-    COMMANDLINE_ARGS="--listen --port 7861 --api --enable-insecure-extension-access --skip-torch-cuda-test"
+    COMMANDLINE_ARGS="--listen --port 7861 --api --enable-insecure-extension-access --skip-torch-cuda-test --skip-install"
 
 # Expose Gradio port
 EXPOSE 7861
