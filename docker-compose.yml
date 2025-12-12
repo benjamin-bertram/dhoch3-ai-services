@@ -1,0 +1,251 @@
+version: "3.8"
+networks:
+  ai-services:
+    driver: bridge
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik_default}
+volumes:
+  comfyui-data: null
+  invokeai-data: null
+  dockge-data: null
+  dockge-stacks: null
+services:
+  # ============================================
+  # ComfyUI - AI Image Generation
+  # ============================================
+  comfyui:
+    image: ${COMFYUI_IMAGE:-yanwenkunwork/comfyui-docker:cu128-megapak-pt28}
+    container_name: dhoch3-comfyui
+    restart: unless-stopped
+    networks:
+      - traefik
+      - ai-services
+    ports:
+      - ${COMFYUI_PORT:-8188}:8188
+    volumes:
+      - ${MODELS_PATH}:/models:ro
+      - comfyui-data:/app/ComfyUI
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/ComfyUI
+        target: /outputs
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.comfyui.rule=Host(`${COMFYUI_SUBDOMAIN:-comfyui}.${DOMAIN}`)
+      - traefik.http.services.comfyui.loadbalancer.server.port=8188
+  # ============================================
+  # Fooocus - AI Image Generation
+  # ============================================
+  fooocus:
+    build:
+      context: ./dockerfiles/fooocus
+      dockerfile: Dockerfile
+    image: dhoch3/fooocus:latest
+    container_name: dhoch3-fooocus
+    restart: unless-stopped
+    networks:
+      - traefik
+      - ai-services
+    ports:
+      - ${FOOOCUS_PORT:-7860}:7860
+    volumes:
+      - ${MODELS_PATH}:/models:ro
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/Fooocus
+        target: /outputs
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.fooocus.rule=Host(`${FOOOCUS_SUBDOMAIN:-fooocus}.${DOMAIN}`)
+      - traefik.http.services.fooocus.loadbalancer.server.port=7860
+  # ============================================
+  # Forge - Stable Diffusion WebUI
+  # ============================================
+  forge:
+    build:
+      context: ./dockerfiles/forge
+      dockerfile: Dockerfile
+    image: dhoch3/forge:latest
+    container_name: dhoch3-forge
+    restart: unless-stopped
+    networks:
+      - traefik
+      - ai-services
+    ports:
+      - ${FORGE_PORT:-7861}:7861
+    volumes:
+      - ${MODELS_PATH}:/models:ro
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/Forge
+        target: /outputs
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.forge.rule=Host(`${FORGE_SUBDOMAIN:-forge}.${DOMAIN}`)
+      - traefik.http.services.forge.loadbalancer.server.port=7861
+  # ============================================
+  # InvokeAI - AI Image Generation
+  # ============================================
+  invokeai:
+    image: ${INVOKEAI_IMAGE:-ghcr.io/invoke-ai/invokeai:latest}
+    container_name: dhoch3-invokeai
+    restart: unless-stopped
+    networks:
+      - traefik
+      - ai-services
+    ports:
+      - ${INVOKEAI_PORT:-9090}:9090
+    volumes:
+      - ${MODELS_PATH}:/models:ro
+      - invokeai-data:/invokeai
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/InvokeAI
+        target: /outputs
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.invokeai.rule=Host(`${INVOKEAI_SUBDOMAIN:-invokeai}.${DOMAIN}`)
+      - traefik.http.services.invokeai.loadbalancer.server.port=9090
+  # ============================================
+  # FluxGym - Flux LoRA Training
+  # ============================================
+  fluxgym:
+    build:
+      context: ./dockerfiles/fluxgym
+      dockerfile: Dockerfile
+    image: dhoch3/fluxgym:latest
+    container_name: dhoch3-fluxgym
+    restart: unless-stopped
+    networks:
+      - traefik
+      - ai-services
+    ports:
+      - ${FLUXGYM_PORT:-3000}:3000
+    volumes:
+      - ${MODELS_PATH}:/models:ro
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/FluxGym
+        target: /outputs
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/FluxGym/datasets
+        target: /datasets
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.fluxgym.rule=Host(`${FLUXGYM_SUBDOMAIN:-fluxgym}.${DOMAIN}`)
+      - traefik.http.services.fluxgym.loadbalancer.server.port=3000
+  # ============================================
+  # AI Toolkit - AI Training Tools
+  # ============================================
+  ai-toolkit:
+    build:
+      context: ./dockerfiles/ai-toolkit
+      dockerfile: Dockerfile
+    image: dhoch3/ai-toolkit:latest
+    container_name: dhoch3-ai-toolkit
+    restart: unless-stopped
+    networks:
+      - traefik
+      - ai-services
+    ports:
+      - ${AI_TOOLKIT_PORT:-8080}:8080
+    volumes:
+      - ${MODELS_PATH}:/models:ro
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/AIToolkit
+        target: /outputs
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/AIToolkit/datasets
+        target: /datasets
+      - type: bind
+        source: //${SMB_SERVER}/${SMB_SHARE}/AIToolkit/config
+        target: /config
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.ai-toolkit.rule=Host(`${AI_TOOLKIT_SUBDOMAIN:-ai-toolkit}.${DOMAIN}`)
+      - traefik.http.services.ai-toolkit.loadbalancer.server.port=8080
+  # ============================================
+  # Dockge - Container Management UI
+  # ============================================
+  dockge:
+    image: ${DOCKGE_IMAGE:-louislam/dockge:latest}
+    container_name: dhoch3-dockge
+    restart: unless-stopped
+    networks:
+      - traefik
+      - ai-services
+    ports:
+      - ${DOCKGE_PORT:-5001}:5001
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - dockge-data:/app/data
+      - dockge-stacks:/opt/stacks
+      - ${PWD}:/opt/stacks/dhoch3-ai-services
+    environment:
+      - DOCKGE_STACKS_DIR=/opt/stacks
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dockge.rule=Host(`${DOCKGE_SUBDOMAIN:-dockge}.${DOMAIN}`)
+      - traefik.http.services.dockge.loadbalancer.server.port=5001
