@@ -40,30 +40,41 @@ declare -a SERVICES=("fooocus" "forge" "fluxgym" "ai-toolkit")
 TOTAL=${#SERVICES[@]}
 SUCCESS=0
 FAILED=0
+SKIPPED=0
 
 # Function to build a single service
 build_service() {
     local service=$1
     local dockerfile_path="$PROJECT_ROOT/dockerfiles/$service"
-    
+
     echo -e "${BLUE}----------------------------------------${NC}"
     echo -e "${BLUE}Building: $service${NC}"
     echo -e "${BLUE}----------------------------------------${NC}"
-    
+
+    # Check if image already exists
+    if docker images "dhoch3/$service:latest" --format "{{.Repository}}:{{.Tag}}" | grep -q "dhoch3/$service:latest"; then
+        echo -e "${YELLOW}⚠ Image dhoch3/$service:latest already exists${NC}"
+        read -p "Rebuild? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${BLUE}ℹ Skipping $service (already built)${NC}"
+            return 2  # Return 2 to indicate "skipped"
+        fi
+    fi
+
     if [ ! -d "$dockerfile_path" ]; then
         echo -e "${RED}Error: Dockerfile directory not found: $dockerfile_path${NC}"
         return 1
     fi
-    
+
     if [ ! -f "$dockerfile_path/Dockerfile" ]; then
         echo -e "${RED}Error: Dockerfile not found: $dockerfile_path/Dockerfile${NC}"
         return 1
     fi
-    
-    # Build the image
+
+    # Build the image (single tag to avoid duplicates)
     if docker build \
         --tag "dhoch3/$service:latest" \
-        --tag "dhoch3/$service:$(date +%Y%m%d)" \
         --file "$dockerfile_path/Dockerfile" \
         "$dockerfile_path"; then
         echo -e "${GREEN}✓ Successfully built: $service${NC}"
@@ -76,11 +87,18 @@ build_service() {
 
 # Build all services (always continue on error to build all images)
 echo -e "${YELLOW}Building all services (will continue even if one fails)...${NC}"
+echo -e "${BLUE}Note: Each service will only be built once (tagged as 'latest')${NC}"
 echo ""
 
 for service in "${SERVICES[@]}"; do
-    if build_service "$service"; then
+    build_result=$?
+    build_service "$service"
+    build_result=$?
+
+    if [ $build_result -eq 0 ]; then
         ((SUCCESS++))
+    elif [ $build_result -eq 2 ]; then
+        ((SKIPPED++))
     else
         ((FAILED++))
         echo -e "${YELLOW}⚠ Continuing with next service...${NC}"
@@ -92,10 +110,13 @@ done
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}Build Summary${NC}"
 echo -e "${BLUE}========================================${NC}"
-echo -e "Total:   $TOTAL"
-echo -e "${GREEN}Success: $SUCCESS${NC}"
+echo -e "Total:    $TOTAL"
+echo -e "${GREEN}Success:  $SUCCESS${NC}"
+if [ $SKIPPED -gt 0 ]; then
+    echo -e "${BLUE}Skipped:  $SKIPPED${NC}"
+fi
 if [ $FAILED -gt 0 ]; then
-    echo -e "${RED}Failed:  $FAILED${NC}"
+    echo -e "${RED}Failed:   $FAILED${NC}"
 fi
 echo ""
 
