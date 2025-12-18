@@ -21,6 +21,8 @@ models/
 *.pth
 *.bin
 
+Initial.md
+
 # Python
 __pycache__/
 *.py[cod]
