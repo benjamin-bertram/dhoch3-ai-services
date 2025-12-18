@@ -42,7 +42,7 @@ services:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
       # Disable flash-attention to avoid CUDA errors on RTX 6000 Ada
-      - XFORMERS_FORCE_DISABLE_TRITON=1
+      - CLI_ARGS=--use-pytorch-cross-attention
       # Better CUDA memory management
       - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
     deploy:

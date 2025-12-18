@@ -9,6 +9,9 @@ outputs/
 # Local testing directories
 test-models/
 test-outputs/
+agents/
+commands/
+rag/
 
 # Model files (too large for git)
 models/
