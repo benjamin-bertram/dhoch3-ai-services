@@ -79,16 +79,9 @@ RUN . venv/bin/activate && \
     pip install --no-build-isolation . && \
     rm -rf /tmp/SageAttention
 
-# Create directories for models and outputs
-RUN mkdir -p /models /outputs /inputs
-
-# Create model subdirectories (Reforge Neo structure)
-RUN mkdir -p /models/Stable-diffusion \
-             /models/VAE \
-             /models/Lora \
-             /models/ControlNet \
-             /models/ESRGAN \
-             /models/embeddings
+# Note: Model directories are created as symlinks in entrypoint (shared-models → Forge naming)
+# Output and input directories are provided via docker-compose volume mounts
+RUN mkdir -p /outputs /inputs
 
 # Environment variables for Reforge Neo configuration
 # NOTE: paths_internal.py reads COMMANDLINE_ARGS and appends to sys.argv automatically
@@ -105,7 +98,7 @@ EXPOSE 7861
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:7861/ || exit 1
 
-# Create entrypoint script
+# Create entrypoint script with model symlink setup
 RUN cat << 'ENTRYPOINT_EOF' > /entrypoint.sh
 #!/bin/bash
 set -e
@@ -114,6 +107,28 @@ echo "Reforge Neo Starting..."
 echo "  GPU: RTX PRO 6000 Blackwell (sm_120)"
 echo "========================================"
 echo ""
+
+# ── Create symlinks from Forge model names → shared ComfyUI-style model dirs ──
+echo "Setting up model symlinks (shared-models → Forge naming)..."
+mkdir -p /models
+# Forge name            → Shared (ComfyUI) name
+ln -sfn /shared-models/checkpoints       /models/Stable-diffusion
+ln -sfn /shared-models/vae               /models/VAE
+ln -sfn /shared-models/loras             /models/Lora
+ln -sfn /shared-models/controlnet        /models/ControlNet
+ln -sfn /shared-models/upscale_models    /models/ESRGAN
+ln -sfn /shared-models/embeddings        /models/embeddings
+# Directories with same name in both systems
+ln -sfn /shared-models/clip              /models/clip
+ln -sfn /shared-models/clip_vision       /models/clip_vision
+ln -sfn /shared-models/diffusion_models  /models/diffusion_models
+ln -sfn /shared-models/text_encoders     /models/text_encoders
+ln -sfn /shared-models/hypernetworks     /models/hypernetworks
+ln -sfn /shared-models/vae_approx        /models/vae_approx
+ln -sfn /shared-models/configs           /models/configs
+echo "Model symlinks created."
+echo ""
+
 echo "Activating virtual environment..."
 source /app/venv/bin/activate
 echo ""

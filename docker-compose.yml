@@ -75,12 +75,14 @@ services:
     ports:
       - ${FOOOCUS_PORT:-7860}:7860
     volumes:
-      # Shared models (READ-ONLY)
-      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/root/models
+      # Shared models (Fooocus resolves paths from /app/models/)
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/app/models
       # User outputs
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/Fooocus:/root/outputs
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/Fooocus:/app/outputs
       # User inputs (READ-ONLY)
-      #- ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/app/inputs:ro
+      # Workflows
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/workflows:/app/workflows
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -116,12 +118,14 @@ services:
     ports:
       - ${FORGE_PORT:-7861}:7861
     volumes:
-      # Shared models (READ-ONLY)
-      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
+      # Shared models (READ-ONLY) - symlinked to Forge naming in entrypoint
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/shared-models:ro
       # User outputs
       - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/Forge:/outputs
       # User inputs (READ-ONLY)
       - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
+      # Workflows
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/workflows:/app/workflows
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -154,14 +158,14 @@ services:
     ports:
       - ${INVOKEAI_PORT:-9090}:9090
     volumes:
-      # Shared models (READ-ONLY)
-      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/root/models:ro
-      # Service data
+      # Service data (internal models, configs, database)
       - invokeai-data:/invokeai
-      # User outputs
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/InvokeAI:/outputs
+      # User outputs (overlays volume at /invokeai/outputs)
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/InvokeAI:/invokeai/outputs
+      # Shared models (browse/import through InvokeAI UI)
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/shared-models:ro
       # User inputs (READ-ONLY)
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/invokeai/inputs:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
@@ -202,8 +206,8 @@ services:
       - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
       # Training outputs
       - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/AIToolkit:/outputs
-      # Training datasets (READ-ONLY)
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/datasets:ro
+      # Training datasets (READ-ONLY) - dedicated datasets folder
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/datasets:/datasets:ro
       # Workflows
       - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/workflows:/workflows
     environment:

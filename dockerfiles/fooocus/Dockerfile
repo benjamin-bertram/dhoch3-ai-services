@@ -56,12 +56,8 @@ RUN pip install torch torchvision torchaudio --index-url https://download.pytorc
 # Install Fooocus dependencies (this will install compatible torchvision/torchaudio if needed)
 RUN pip install -r requirements_versions.txt
 
-# Create directories for models and outputs
-RUN mkdir -p /models /outputs
-
-# Environment variables for Fooocus configuration
-ENV FOOOCUS_MODEL_PATH=/models \
-    FOOOCUS_OUTPUT_PATH=/outputs
+# Note: Models and outputs directories are provided via docker-compose volume mounts
+# Fooocus resolves paths relative to /app/models/ and /app/outputs/ by default
 
 # Expose Gradio port
 EXPOSE 7860
