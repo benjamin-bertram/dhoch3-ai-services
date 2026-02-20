@@ -66,9 +66,18 @@ RUN . venv/bin/activate && \
 RUN . venv/bin/activate && \
     uv pip install "gradio==4.40.0" "gradio_rangeslider==0.0.8" "packaging==26.0"
 
-# Pre-install build dependencies for SageAttention + Triton (compiled at startup with GPU)
+# Pre-install build dependencies for SageAttention + Triton
 RUN . venv/bin/activate && \
-    uv pip install triton setuptools wheel ninja
+    uv pip install "triton==3.6.0" setuptools wheel ninja
+
+# Build SageAttention from source (v2.2.0 not on PyPI, must build from GitHub)
+# Uses --no-build-isolation so it finds torch/triton already in venv
+# TORCH_CUDA_ARCH_LIST="12.0" cross-compiles CUDA kernels for sm_120 (Blackwell) without needing GPU
+RUN . venv/bin/activate && \
+    git clone https://github.com/thu-ml/SageAttention.git /tmp/SageAttention && \
+    cd /tmp/SageAttention && \
+    pip install --no-build-isolation . && \
+    rm -rf /tmp/SageAttention
 
 # Create directories for models and outputs
 RUN mkdir -p /models /outputs /inputs
@@ -84,8 +93,8 @@ RUN mkdir -p /models/Stable-diffusion \
 # Environment variables for Reforge Neo configuration
 # NOTE: paths_internal.py reads COMMANDLINE_ARGS and appends to sys.argv automatically
 # Do NOT also pass ${COMMANDLINE_ARGS} on the command line or args will be doubled!
-# --skip-prepare-environment removed: let prepare_environment() run to install SageAttention at runtime (needs GPU)
-# --skip-install removed: needed for prepare_environment() to actually install packages
+# SageAttention is pre-built from source during Docker build (cross-compiled for sm_120)
+# prepare_environment() will see is_installed("sageattention") == True and skip re-install
 ENV COMMANDLINE_ARGS="--listen --port 7861 --api --skip-python-version-check --skip-torch-cuda-test --skip-version-check --sage --uv" \
     TORCH_INDEX_URL="https://download.pytorch.org/whl/cu128"
 
@@ -97,9 +106,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:7861/ || exit 1
 
 # Create entrypoint script
-# IMPORTANT: Do NOT pass ${COMMANDLINE_ARGS} to launch.py!
-# paths_internal.py reads the env var and appends to sys.argv automatically.
-# prepare_environment() will install SageAttention at runtime (needs GPU for sm_120 kernels).
 RUN cat << 'ENTRYPOINT_EOF' > /entrypoint.sh
 #!/bin/bash
 set -e
@@ -116,9 +122,9 @@ echo "PyTorch version: $(python -c 'import torch; print(torch.__version__)')"
 echo "CUDA available: $(python -c 'import torch; print(torch.cuda.is_available())')"
 echo "CUDA version: $(python -c 'import torch; print(torch.version.cuda if torch.cuda.is_available() else "N/A")')"
 echo "GPU: $(python -c 'import torch; print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "N/A")')"
-echo "VRAM: $(python -c 'import torch; print(f"{torch.cuda.get_device_properties(0).total_mem / 1024**3:.0f} GB") if torch.cuda.is_available() else print("N/A")')"
+echo "VRAM: $(python -c 'import torch; print(f"{torch.cuda.get_device_properties(0).total_memory / 1024**3:.0f} GB") if torch.cuda.is_available() else print("N/A")')"
 echo ""
-echo "Starting Reforge Neo (prepare_environment will install SageAttention on first run)..."
+echo "Starting Reforge Neo..."
 echo ""
 python launch.py
 ENTRYPOINT_EOF
