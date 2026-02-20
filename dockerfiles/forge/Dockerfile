@@ -62,6 +62,10 @@ RUN . venv/bin/activate && \
 RUN . venv/bin/activate && \
     uv pip install -r requirements.txt
 
+# Install gradio + packaging (normally installed by prepare_environment, but we pre-install for faster startup)
+RUN . venv/bin/activate && \
+    uv pip install "gradio==4.40.0" "gradio_rangeslider==0.0.8" "packaging==26.0"
+
 # Pre-install build dependencies for SageAttention + Triton (compiled at startup with GPU)
 RUN . venv/bin/activate && \
     uv pip install triton setuptools wheel ninja
@@ -78,7 +82,12 @@ RUN mkdir -p /models/Stable-diffusion \
              /models/embeddings
 
 # Environment variables for Reforge Neo configuration
-ENV COMMANDLINE_ARGS="--listen --port 7861 --api --skip-prepare-environment --skip-install --skip-python-version-check --skip-torch-cuda-test --skip-version-check --sage --uv"
+# NOTE: paths_internal.py reads COMMANDLINE_ARGS and appends to sys.argv automatically
+# Do NOT also pass ${COMMANDLINE_ARGS} on the command line or args will be doubled!
+# --skip-prepare-environment removed: let prepare_environment() run to install SageAttention at runtime (needs GPU)
+# --skip-install removed: needed for prepare_environment() to actually install packages
+ENV COMMANDLINE_ARGS="--listen --port 7861 --api --skip-python-version-check --skip-torch-cuda-test --skip-version-check --sage --uv" \
+    TORCH_INDEX_URL="https://download.pytorch.org/whl/cu128"
 
 # Expose Gradio port
 EXPOSE 7861
@@ -87,7 +96,10 @@ EXPOSE 7861
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:7861/ || exit 1
 
-# Create entrypoint script with runtime SageAttention + Triton compilation
+# Create entrypoint script
+# IMPORTANT: Do NOT pass ${COMMANDLINE_ARGS} to launch.py!
+# paths_internal.py reads the env var and appends to sys.argv automatically.
+# prepare_environment() will install SageAttention at runtime (needs GPU for sm_120 kernels).
 RUN cat << 'ENTRYPOINT_EOF' > /entrypoint.sh
 #!/bin/bash
 set -e
@@ -104,22 +116,11 @@ echo "PyTorch version: $(python -c 'import torch; print(torch.__version__)')"
 echo "CUDA available: $(python -c 'import torch; print(torch.cuda.is_available())')"
 echo "CUDA version: $(python -c 'import torch; print(torch.version.cuda if torch.cuda.is_available() else "N/A")')"
 echo "GPU: $(python -c 'import torch; print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "N/A")')"
+echo "VRAM: $(python -c 'import torch; print(f"{torch.cuda.get_device_properties(0).total_mem / 1024**3:.0f} GB") if torch.cuda.is_available() else print("N/A")')"
 echo ""
-
-# Build SageAttention at runtime (needs GPU for sm_120 kernel compilation)
-SAGE_MARKER="/app/.sage_installed"
-if [ ! -f "$SAGE_MARKER" ]; then
-  echo "========================================"
-  echo "First startup: Building SageAttention for Blackwell..."
-  echo "========================================"
-  pip install sageattention 2>&1 && touch "$SAGE_MARKER" || echo "WARNING: SageAttention install failed (non-critical)"
-  echo ""
-fi
-
-echo "Starting Reforge Neo..."
-echo "Command: python launch.py ${COMMANDLINE_ARGS}"
+echo "Starting Reforge Neo (prepare_environment will install SageAttention on first run)..."
 echo ""
-python launch.py ${COMMANDLINE_ARGS}
+python launch.py
 ENTRYPOINT_EOF
 RUN chmod +x /entrypoint.sh
 
