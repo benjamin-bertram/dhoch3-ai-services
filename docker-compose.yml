@@ -56,7 +56,7 @@ services:
       - traefik.docker.network=base
       # HTTP Router
       - traefik.http.routers.comfyui.entrypoints=websecure
-      - traefik.http.routers.comfyui.rule=Host(`${COMFYUI_SUBDOMAIN:-comfyui}.app.${DOMAIN}`)
+      - traefik.http.routers.comfyui.rule=Host(`${COMFYUI_SUBDOMAIN:-comfyui}.${DOMAIN}`)
       - traefik.http.routers.comfyui.tls=true
       - traefik.http.services.comfyui.loadbalancer.server.port=8188
   # ============================================
@@ -97,7 +97,7 @@ services:
       - traefik.docker.network=base
       # HTTP Router
       - traefik.http.routers.fooocus.entrypoints=websecure
-      - traefik.http.routers.fooocus.rule=Host(`${FOOOCUS_SUBDOMAIN:-fooocus}.app.${DOMAIN}`)
+      - traefik.http.routers.fooocus.rule=Host(`${FOOOCUS_SUBDOMAIN:-fooocus}.${DOMAIN}`)
       - traefik.http.routers.fooocus.tls=true
       - traefik.http.services.fooocus.loadbalancer.server.port=7860
   # ============================================
@@ -138,7 +138,7 @@ services:
       - traefik.docker.network=base
       # HTTP Router
       - traefik.http.routers.forge.entrypoints=websecure
-      - traefik.http.routers.forge.rule=Host(`${FORGE_SUBDOMAIN:-forge}.app.${DOMAIN}`)
+      - traefik.http.routers.forge.rule=Host(`${FORGE_SUBDOMAIN:-forge}.${DOMAIN}`)
       - traefik.http.routers.forge.tls=true
       - traefik.http.services.forge.loadbalancer.server.port=7861
   # ============================================
@@ -178,7 +178,7 @@ services:
       - traefik.docker.network=base
       # HTTP Router
       - traefik.http.routers.invokeai.entrypoints=websecure
-      - traefik.http.routers.invokeai.rule=Host(`${INVOKEAI_SUBDOMAIN:-invokeai}.app.${DOMAIN}`)
+      - traefik.http.routers.invokeai.rule=Host(`${INVOKEAI_SUBDOMAIN:-invokeai}.${DOMAIN}`)
       - traefik.http.routers.invokeai.tls=true
       - traefik.http.services.invokeai.loadbalancer.server.port=9090
 
@@ -222,7 +222,7 @@ services:
       - traefik.docker.network=base
       # HTTP Router
       - traefik.http.routers.ai-toolkit.entrypoints=websecure
-      - traefik.http.routers.ai-toolkit.rule=Host(`${AI_TOOLKIT_SUBDOMAIN:-ai-toolkit}.app.${DOMAIN}`)
+      - traefik.http.routers.ai-toolkit.rule=Host(`${AI_TOOLKIT_SUBDOMAIN:-ai-toolkit}.${DOMAIN}`)
       - traefik.http.routers.ai-toolkit.tls=true
       - traefik.http.services.ai-toolkit.loadbalancer.server.port=8675
   # ============================================
@@ -249,6 +249,6 @@ services:
       - traefik.docker.network=base
       # HTTP Router
       - traefik.http.routers.dockge.entrypoints=websecure
-      - traefik.http.routers.dockge.rule=Host(`${DOCKGE_SUBDOMAIN:-dockge}.app.${DOMAIN}`)
+      - traefik.http.routers.dockge.rule=Host(`${DOCKGE_SUBDOMAIN:-dockge}.${DOMAIN}`)
       - traefik.http.routers.dockge.tls=true
       - traefik.http.services.dockge.loadbalancer.server.port=5001
