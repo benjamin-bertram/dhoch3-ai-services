@@ -109,24 +109,25 @@ echo "========================================"
 echo ""
 
 # ── Create symlinks from Forge model names → shared ComfyUI-style model dirs ──
-echo "Setting up model symlinks (shared-models → Forge naming)..."
-mkdir -p /models
+# Forge looks for models at /app/models/ (relative to WORKDIR /app)
+echo "Setting up model symlinks (shared-models → Forge naming at /app/models/)..."
+mkdir -p /app/models
 # Forge name            → Shared (ComfyUI) name
-ln -sfn /shared-models/checkpoints       /models/Stable-diffusion
-ln -sfn /shared-models/vae               /models/VAE
-ln -sfn /shared-models/loras             /models/Lora
-ln -sfn /shared-models/controlnet        /models/ControlNet
-ln -sfn /shared-models/upscale_models    /models/ESRGAN
-ln -sfn /shared-models/embeddings        /models/embeddings
+ln -sfn /shared-models/checkpoints       /app/models/Stable-diffusion
+ln -sfn /shared-models/vae               /app/models/VAE
+ln -sfn /shared-models/loras             /app/models/Lora
+ln -sfn /shared-models/controlnet        /app/models/ControlNet
+ln -sfn /shared-models/upscale_models    /app/models/ESRGAN
+ln -sfn /shared-models/embeddings        /app/models/embeddings
 # Directories with same name in both systems
-ln -sfn /shared-models/clip              /models/clip
-ln -sfn /shared-models/clip_vision       /models/clip_vision
-ln -sfn /shared-models/diffusion_models  /models/diffusion_models
-ln -sfn /shared-models/text_encoders     /models/text_encoders
-ln -sfn /shared-models/hypernetworks     /models/hypernetworks
-ln -sfn /shared-models/vae_approx        /models/vae_approx
-ln -sfn /shared-models/configs           /models/configs
-echo "Model symlinks created."
+ln -sfn /shared-models/clip              /app/models/clip
+ln -sfn /shared-models/clip_vision       /app/models/clip_vision
+ln -sfn /shared-models/diffusion_models  /app/models/diffusion_models
+ln -sfn /shared-models/text_encoders     /app/models/text_encoders
+ln -sfn /shared-models/hypernetworks     /app/models/hypernetworks
+ln -sfn /shared-models/vae_approx        /app/models/vae_approx
+ln -sfn /shared-models/configs           /app/models/configs
+echo "Model symlinks created at /app/models/."
 echo ""
 
 echo "Activating virtual environment..."

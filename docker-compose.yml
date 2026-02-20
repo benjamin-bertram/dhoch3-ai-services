@@ -75,8 +75,8 @@ services:
     ports:
       - ${FOOOCUS_PORT:-7860}:7860
     volumes:
-      # Shared models (Fooocus resolves paths from /app/models/)
-      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/app/models
+      # Shared models (READ-ONLY) - symlinked to /app/models/ subdirs in entrypoint
+      - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/shared-models:ro
       # User outputs
       - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/Fooocus:/app/outputs
       # User inputs (READ-ONLY)

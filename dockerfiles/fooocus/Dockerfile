@@ -56,8 +56,8 @@ RUN pip install torch torchvision torchaudio --index-url https://download.pytorc
 # Install Fooocus dependencies (this will install compatible torchvision/torchaudio if needed)
 RUN pip install -r requirements_versions.txt
 
-# Note: Models and outputs directories are provided via docker-compose volume mounts
-# Fooocus resolves paths relative to /app/models/ and /app/outputs/ by default
+# Note: Shared models are mounted read-only at /shared-models
+# Entrypoint symlinks shared subdirs into /app/models/ while preserving Fooocus-internal dirs
 
 # Expose Gradio port
 EXPOSE 7860
@@ -66,9 +66,44 @@ EXPOSE 7860
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:7860/ || exit 1
 
-# Run Fooocus
-CMD ["python", "entry_with_update.py", \
-     "--listen", "0.0.0.0", \
-     "--port", "7860", \
-     "--always-gpu"]
+# Create entrypoint script that symlinks shared models → /app/models/ subdirs
+# Internal Fooocus dirs (prompt_expansion, inpaint, safety_checker, sam) are NOT symlinked
+# so Fooocus can create/download them at runtime
+RUN cat << 'ENTRYPOINT_EOF' > /entrypoint.sh
+#!/bin/bash
+set -e
+echo "========================================"
+echo "Fooocus Starting..."
+echo "  GPU: RTX PRO 6000 Blackwell (sm_120)"
+echo "========================================"
+echo ""
+
+# ── Symlink shared model dirs into /app/models/ ──
+# These are the dirs that come from the shared NVMe model storage
+echo "Setting up model symlinks (shared-models → /app/models/)..."
+SHARED_DIRS="checkpoints loras embeddings vae vae_approx controlnet clip_vision upscale_models"
+for dir in $SHARED_DIRS; do
+    if [ -d "/shared-models/$dir" ]; then
+        # Remove existing dir/symlink if present, then create symlink
+        rm -rf "/app/models/$dir"
+        ln -sfn "/shared-models/$dir" "/app/models/$dir"
+        echo "  $dir → /shared-models/$dir"
+    fi
+done
+echo "Model symlinks created."
+echo ""
+
+# Internal dirs (prompt_expansion, inpaint, safety_checker, sam) are left untouched
+# Fooocus will create/download them on first run into /app/models/
+
+echo "Starting Fooocus..."
+exec python entry_with_update.py \
+     --listen 0.0.0.0 \
+     --port 7860 \
+     --always-gpu
+ENTRYPOINT_EOF
+RUN chmod +x /entrypoint.sh
+
+# Run Fooocus via entrypoint
+CMD ["/entrypoint.sh"]
 
