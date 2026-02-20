@@ -120,8 +120,8 @@ services:
     volumes:
       # Shared models (READ-ONLY) - symlinked to Forge naming in entrypoint
       - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/shared-models:ro
-      # User outputs (Forge writes to /app/outputs/ relative to WORKDIR)
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/Forge:/app/outputs
+      # User outputs (Forge writes to /app/output/ — singular, not plural)
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/Forge:/app/output
       # User inputs (READ-ONLY)
       - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/input:/inputs:ro
       # Workflows
