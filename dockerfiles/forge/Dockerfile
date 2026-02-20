@@ -88,38 +88,40 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:7861/ || exit 1
 
 # Create entrypoint script with runtime SageAttention + Triton compilation
-RUN echo '#!/bin/bash\n\
-set -e\n\
-echo "========================================"\n\
-echo "Reforge Neo Starting..."\n\
-echo "  GPU: RTX PRO 6000 Blackwell (sm_120)"\n\
-echo "========================================"\n\
-echo ""\n\
-echo "Activating virtual environment..."\n\
-source /app/venv/bin/activate\n\
-echo ""\n\
-echo "Python version: $(python --version)"\n\
-echo "PyTorch version: $(python -c \"import torch; print(torch.__version__)\")"\n\
-echo "CUDA available: $(python -c \"import torch; print(torch.cuda.is_available())\")"\n\
-echo "CUDA version: $(python -c \"import torch; print(torch.version.cuda if torch.cuda.is_available() else '\"'\"'N/A'\"'\"')\")"\n\
-echo "GPU: $(python -c \"import torch; print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else '\"'\"'N/A'\"'\"')\")"\n\
-echo ""\n\
-\n\
-# Build SageAttention at runtime (needs GPU for sm_120 kernel compilation)\n\
-SAGE_MARKER="/app/.sage_installed"\n\
-if [ ! -f "$SAGE_MARKER" ]; then\n\
-  echo "========================================"\n\
-  echo "First startup: Building SageAttention for Blackwell..."\n\
-  echo "========================================"\n\
-  pip install sageattention 2>&1 && touch "$SAGE_MARKER" || echo "WARNING: SageAttention install failed (non-critical)"\n\
-  echo ""\n\
-fi\n\
-\n\
-echo "Starting Reforge Neo..."\n\
-echo "Command: python launch.py ${COMMANDLINE_ARGS}"\n\
-echo ""\n\
-python launch.py ${COMMANDLINE_ARGS}\n\
-' > /entrypoint.sh && chmod +x /entrypoint.sh
+RUN cat << 'ENTRYPOINT_EOF' > /entrypoint.sh
+#!/bin/bash
+set -e
+echo "========================================"
+echo "Reforge Neo Starting..."
+echo "  GPU: RTX PRO 6000 Blackwell (sm_120)"
+echo "========================================"
+echo ""
+echo "Activating virtual environment..."
+source /app/venv/bin/activate
+echo ""
+echo "Python version: $(python --version)"
+echo "PyTorch version: $(python -c 'import torch; print(torch.__version__)')"
+echo "CUDA available: $(python -c 'import torch; print(torch.cuda.is_available())')"
+echo "CUDA version: $(python -c 'import torch; print(torch.version.cuda if torch.cuda.is_available() else "N/A")')"
+echo "GPU: $(python -c 'import torch; print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "N/A")')"
+echo ""
+
+# Build SageAttention at runtime (needs GPU for sm_120 kernel compilation)
+SAGE_MARKER="/app/.sage_installed"
+if [ ! -f "$SAGE_MARKER" ]; then
+  echo "========================================"
+  echo "First startup: Building SageAttention for Blackwell..."
+  echo "========================================"
+  pip install sageattention 2>&1 && touch "$SAGE_MARKER" || echo "WARNING: SageAttention install failed (non-critical)"
+  echo ""
+fi
+
+echo "Starting Reforge Neo..."
+echo "Command: python launch.py ${COMMANDLINE_ARGS}"
+echo ""
+python launch.py ${COMMANDLINE_ARGS}
+ENTRYPOINT_EOF
+RUN chmod +x /entrypoint.sh
 
 # Run Reforge Neo
 CMD ["/entrypoint.sh"]
