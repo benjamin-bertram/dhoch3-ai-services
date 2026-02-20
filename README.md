@@ -59,7 +59,7 @@ All services share:
 ## 💻 System Requirements
 
 ### Hardware
-- **GPU**: NVIDIA RTX Pro 6000 (48GB VRAM) or similar
+- **GPU**: NVIDIA RTX Pro 6000 (96GB VRAM) or similar
 - **RAM**: 32GB+ recommended
 - **Storage**: 500GB+ for models and outputs
 
