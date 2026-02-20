@@ -204,10 +204,10 @@ services:
     volumes:
       # Shared models (READ-ONLY)
       - ${MODELS_PATH:-/vol/service/cw/storage-models/models}:/models:ro
-      # Training outputs
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/AIToolkit:/outputs
-      # Training datasets (READ-ONLY) - dedicated datasets folder
-      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/datasets:/datasets:ro
+      # Training outputs (inside project root so UI finds it)
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/output/AIToolkit:/ai-toolkit/outputs
+      # Training datasets (writable - AI Toolkit may modify datasets)
+      - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/datasets:/ai-toolkit/datasets
       # Workflows
       - ${USER_STORAGE_PATH:-/vol/service/cw/storage-user}/workflows:/workflows
     environment:
