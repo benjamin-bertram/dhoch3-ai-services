@@ -1,8 +1,8 @@
 # AI Toolkit (Ostris) Dockerfile
-# Optimized for RTX 5090 / RTX Pro 6000 with CUDA 12.4 support
+# Optimized for RTX PRO 6000 Blackwell (sm_120, 96GB GDDR7) with CUDA 12.8
 # Training toolkit for AI models with Web UI
 
-FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
+FROM nvidia/cuda:12.8.1-devel-ubuntu22.04
 
 # Build arguments
 ARG DEBIAN_FRONTEND=noninteractive
@@ -61,8 +61,8 @@ RUN git clone https://github.com/ostris/ai-toolkit.git . && \
     git checkout main && \
     git submodule update --init --recursive
 
-# Install PyTorch with CUDA 12.4 support (for RTX 5090)
-RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+# Install PyTorch with CUDA 12.8 support (required for Blackwell sm_120)
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 
 # Install AI Toolkit dependencies
 RUN pip install -r requirements.txt

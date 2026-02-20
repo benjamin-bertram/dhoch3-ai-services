@@ -16,9 +16,8 @@ services:
   comfyui:
     # Using YanWenKun's ComfyUI image (correct repository name)
     # Repository: https://github.com/YanWenKun/ComfyUI-Docker
-    # Using cu121-megapak - CUDA 12.1 has better flash-attention compatibility with RTX 6000 Ada
-    # cu128 and cu124 both had flash-attention errors (flash_fwd_launch_template.h:180)
-    image: ${COMFYUI_IMAGE:-yanwk/comfyui-boot:cu121-megapak}
+    # Using cu128-megapak - CUDA 12.8 required for RTX PRO 6000 Blackwell (sm_120)
+    image: ${COMFYUI_IMAGE:-yanwk/comfyui-boot:cu128-megapak}
     container_name: dhoch3-comfyui
     restart: unless-stopped
     networks:
@@ -40,8 +39,8 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
-      # Disable flash-attention to avoid CUDA errors on RTX 6000 Ada
-      - CLI_ARGS=--use-pytorch-cross-attention
+      # Blackwell (sm_120) supports flash-attention natively with CUDA 12.8
+      - CLI_ARGS=--disable-xformers
       # Better CUDA memory management
       - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
     deploy:

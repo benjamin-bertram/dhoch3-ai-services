@@ -1,7 +1,7 @@
 # Fooocus Dockerfile
-# Optimized for RTX 5090 / RTX Pro 6000 with CUDA 12.4 support
+# Optimized for RTX PRO 6000 Blackwell (sm_120, 96GB GDDR7) with CUDA 12.8
 
-FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+FROM nvidia/cuda:12.8.1-runtime-ubuntu22.04
 
 # Build arguments
 ARG DEBIAN_FRONTEND=noninteractive
@@ -50,8 +50,8 @@ WORKDIR /app
 RUN git clone https://github.com/lllyasviel/Fooocus.git . && \
     git checkout main
 
-# Install PyTorch nightly with CUDA 12.4 support (required for RTX 5090 sm_120)
-RUN pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu124
+# Install PyTorch with CUDA 12.8 support (required for Blackwell sm_120)
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 
 # Install Fooocus dependencies (this will install compatible torchvision/torchaudio if needed)
 RUN pip install -r requirements_versions.txt
