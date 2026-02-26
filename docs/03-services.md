@@ -128,7 +128,7 @@ Detailed information about each AI service, what it does, and how to use it.
 
 | | |
 |---|---|
-| **URL** | `http://192.168.0.10:11434` (API only, no web UI) |
+| **URL** | `http://127.0.0.1:11434` (API only, no web UI) |
 | **Installation** | Native Linux binary (not Docker) |
 | **Website** | [ollama.com](https://ollama.com) |
 | **GitHub** | [github.com/ollama/ollama](https://github.com/ollama/ollama) |
